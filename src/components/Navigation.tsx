@@ -7,6 +7,7 @@ import { supabase, signOut, onAuthStateChange } from "@/integrations/supabase/cl
 import { useToast } from "@/hooks/use-toast";
 import { useXP } from "@/hooks/useXP";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { XPMeterPopup } from "@/components/XPMeterPopup";
 import synqedLogo from "@/assets/synqed-logo.png";
 
 const Navigation = () => {
@@ -89,16 +90,8 @@ const Navigation = () => {
 
           {/* User Actions */}
           <div className="hidden md:flex items-center space-x-4">
+            <XPMeterPopup />
             <ThemeToggle />
-            <div className="flex items-center space-x-2">
-              <Badge variant="secondary" className="bg-gradient-primary text-white">
-                Level {userLevel}
-              </Badge>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">XP</p>
-                <p className="text-sm font-semibold text-gamification-xp">{userXP.toLocaleString()}</p>
-              </div>
-            </div>
             {user ? (
               <>
                 <Link to="/profile">
@@ -157,11 +150,8 @@ const Navigation = () => {
               ))}
               <div className="pt-3 border-t border-glass-border">
                 <div className="flex items-center justify-between mb-3">
+                  <XPMeterPopup />
                   <ThemeToggle />
-                  <Badge variant="secondary" className="bg-gradient-primary text-white">
-                    Level {userLevel}
-                  </Badge>
-                  <span className="text-sm font-semibold text-gamification-xp">{userXP.toLocaleString()} XP</span>
                 </div>
                 <div className="space-y-2">
                   {user ? (
