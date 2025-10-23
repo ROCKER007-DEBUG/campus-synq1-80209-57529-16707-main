@@ -82,6 +82,7 @@ const PeerBridge = () => {
     const groups = safeParse<StudyGroup[]>(localStorage.getItem(STORAGE_KEYS.groups), DEFAULT_GROUPS);
     const messages = safeParse<Record<string, GroupMessage[]>>(localStorage.getItem(STORAGE_KEYS.messages), DEFAULT_MESSAGES);
     const members = safeParse<Record<string, { id: string; name: string; initials: string }[]>>(localStorage.getItem(STORAGE_KEYS.members), DEFAULT_MEMBERS);
+    console.debug('[PeerBridge] readStorageState', { ts: localStorage.getItem(STORAGE_KEYS.lastUpdated), groupsCount: groups.length, messagesKeys: Object.keys(messages).length, membersKeys: Object.keys(members).length });
     return { groups, messages, members };
   };
 
@@ -92,6 +93,7 @@ const PeerBridge = () => {
       if (pieces.members) localStorage.setItem(STORAGE_KEYS.members, JSON.stringify(pieces.members));
       const ts = String(Date.now());
       localStorage.setItem(STORAGE_KEYS.lastUpdated, ts);
+      console.debug('[PeerBridge] writeStoragePieces', { ts, groupsWritten: pieces.groups ? pieces.groups.length : undefined });
       // Broadcast to other tabs; fallback to ping key
       try {
         const bc = new BroadcastChannel('peerbridge');
@@ -123,9 +125,11 @@ const PeerBridge = () => {
       bc.onmessage = (ev) => {
         if (ev?.data?.type === 'state-update') {
           const last = localStorage.getItem(STORAGE_KEYS.lastUpdated);
+          console.debug('[PeerBridge] bc.onmessage received', { last, lastUpdatedRef: lastUpdatedRef.current });
           if (last === lastUpdatedRef.current) return;
           lastUpdatedRef.current = last;
           const s = readStorageState();
+          console.debug('[PeerBridge] bc applying state', { groupsCount: s.groups.length });
           setGroups(s.groups);
           setMessages(s.messages);
           setGroupMembers(s.members);
@@ -142,9 +146,11 @@ const PeerBridge = () => {
       if (!key) return;
       if (!RELEVANT_KEYS.has(key)) return;
       const last = localStorage.getItem(STORAGE_KEYS.lastUpdated);
+      console.debug('[PeerBridge] storage event', { key, last, lastUpdatedRef: lastUpdatedRef.current });
       if (last === lastUpdatedRef.current) return;
       lastUpdatedRef.current = last;
       const s = readStorageState();
+      console.debug('[PeerBridge] storage applying state', { groupsCount: s.groups.length });
       setGroups(s.groups);
       setMessages(s.messages);
       setGroupMembers(s.members);
@@ -264,6 +270,7 @@ const PeerBridge = () => {
                       const id = `local-${Date.now()}`;
                       const schedule = [newGroupDate, newGroupTime].filter(Boolean).join(' ');
                       const created: StudyGroup = { id, name: newGroupName.trim(), subject: newGroupSubject.trim(), schedule, members_count: 1, created_at: new Date().toISOString() };
+                      console.debug('[PeerBridge] creating group locally', { id, name: created.name });
                       setGroups(prev => [created, ...prev]);
                       setGroupMembers(prev => ({ ...prev, [id]: [{ id: `u_local`, name: 'You (demo)', initials: 'ME' }] }));
                       setMessages(prev => ({ ...prev, [id]: [] }));
